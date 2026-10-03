@@ -21,8 +21,10 @@
 // #include <ros/ros.h>
 #include <rclcpp/rclcpp.hpp>
 #include <pcl_conversions/pcl_conversions.h>
+#ifdef FAST_LIO_HAS_LIVOX
 #include <livox_interfaces/msg/custom_msg.hpp>
 #include <livox_ros_driver2/msg/custom_msg.hpp>
+#endif
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <cstdint>
 
@@ -215,8 +217,10 @@ class Preprocess
   Preprocess();
   ~Preprocess();
   
+#ifdef FAST_LIO_HAS_LIVOX
   void process(const livox_interfaces::msg::CustomMsg::UniquePtr &msg, PointCloudXYZI::Ptr &pcl_out);
   void process(const livox_ros_driver2::msg::CustomMsg::UniquePtr &msg, PointCloudXYZI::Ptr &pcl_out);
+#endif
   void process(const sensor_msgs::msg::PointCloud2::UniquePtr &msg, PointCloudXYZI::Ptr &pcl_out);
   void process(const sensor_msgs::msg::PointCloud2::UniquePtr &msg, PointCloudXYZI::Ptr &pcl_out,
                int i_sub_cloud, int num_sub_cloud, double &start_time, double &end_time);
@@ -232,10 +236,12 @@ class Preprocess
   bool feature_enabled, given_offset_time;
 
 private:
+#ifdef FAST_LIO_HAS_LIVOX
   template <typename LivoxCustomMsgUniquePtr>
   void livox_custom_handler_impl(const LivoxCustomMsgUniquePtr &msg);
   void livox_custom_handler(const livox_interfaces::msg::CustomMsg::UniquePtr &msg);
   void livox_custom_handler(const livox_ros_driver2::msg::CustomMsg::UniquePtr &msg);
+#endif
   void hesai_handler(const sensor_msgs::msg::PointCloud2::UniquePtr &msg);
   void robosense_airy_handler(const sensor_msgs::msg::PointCloud2::UniquePtr &msg,
                               int i_sub_cloud, int num_sub_cloud, double &start_time, double &end_time);

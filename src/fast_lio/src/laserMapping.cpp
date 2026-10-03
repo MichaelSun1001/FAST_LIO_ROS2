@@ -68,8 +68,10 @@
 #include <tf2_ros/transform_broadcaster.h>
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <geometry_msgs/msg/vector3.hpp>
+#ifdef FAST_LIO_HAS_LIVOX
 #include <livox_interfaces/msg/custom_msg.hpp>
 #include <livox_ros_driver2/msg/custom_msg.hpp>
+#endif
 #include "preprocess.h"
 #include <ikd-Tree/ikd_Tree.h>
 
@@ -381,15 +383,17 @@ void livox_custom_pcl_cbk(const LivoxCustomMsgUniquePtr &msg)
     sig_buffer.notify_all();
 }
 
+#ifdef FAST_LIO_HAS_LIVOX
 void livox_interfaces_pcl_cbk(const livox_interfaces::msg::CustomMsg::UniquePtr msg)
 {
-    livox_custom_pcl_cbk(msg);
+  livox_custom_pcl_cbk(msg);
 }
 
 void livox_pcl_cbk(const livox_ros_driver2::msg::CustomMsg::UniquePtr msg)
 {
-    livox_custom_pcl_cbk(msg);
+  livox_custom_pcl_cbk(msg);
 }
+#endif
 
 void imu_cbk(const sensor_msgs::msg::Imu::UniquePtr msg_in)
 {
@@ -1052,19 +1056,23 @@ public:
             cout << "~~~~"<<ROOT_DIR<<" doesn't exist" << endl;
 
         /*** ROS subscribe initialization ***/
+#ifdef FAST_LIO_HAS_LIVOX
         if (p_pre->lidar_type == avia || p_pre->lidar_type == horizon)
         {
-            sub_pcl_livox_interfaces_ = this->create_subscription<livox_interfaces::msg::CustomMsg>(lid_topic, 20, livox_interfaces_pcl_cbk);
+            // LiDAR/IMU streams use sensor-data QoS so they can receive both
+            // BEST_EFFORT and RELIABLE publishers (the rosbag uses BEST_EFFORT).
+            sub_pcl_livox_interfaces_ = this->create_subscription<livox_interfaces::msg::CustomMsg>(lid_topic, rclcpp::SensorDataQoS(), livox_interfaces_pcl_cbk);
         }
         else if (p_pre->lidar_type == mid360)
         {
-            sub_pcl_livox_ = this->create_subscription<livox_ros_driver2::msg::CustomMsg>(lid_topic, 20, livox_pcl_cbk);
+            sub_pcl_livox_ = this->create_subscription<livox_ros_driver2::msg::CustomMsg>(lid_topic, rclcpp::SensorDataQoS(), livox_pcl_cbk);
         }
         else
+#endif
         {
             sub_pcl_pc_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(lid_topic, rclcpp::SensorDataQoS(), standard_pcl_cbk);
         }
-        sub_imu_ = this->create_subscription<sensor_msgs::msg::Imu>(imu_topic, 10, imu_cbk);
+        sub_imu_ = this->create_subscription<sensor_msgs::msg::Imu>(imu_topic, rclcpp::SensorDataQoS(), imu_cbk);
         pubLaserCloudFull_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/cloud_registered", 20);
         pubLaserCloudFull_body_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/cloud_registered_body", 20);
         pubLaserCloudEffect_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/cloud_effected", 20);
@@ -1293,8 +1301,10 @@ private:
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pubPath_;
     rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr sub_imu_;
     rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr sub_pcl_pc_;
+#ifdef FAST_LIO_HAS_LIVOX
     rclcpp::Subscription<livox_interfaces::msg::CustomMsg>::SharedPtr sub_pcl_livox_interfaces_;
     rclcpp::Subscription<livox_ros_driver2::msg::CustomMsg>::SharedPtr sub_pcl_livox_;
+#endif
 
     std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
     rclcpp::TimerBase::SharedPtr timer_;

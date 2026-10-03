@@ -67,7 +67,14 @@ cd /home/sax/FAST_LIO_ROS2
 source /opt/ros/humble/setup.bash
 source /home/sax/Livox_MID360/install/setup.bash
 source /home/sax/Livox_AVIA_ROS2/install/setup.bash
-colcon build --symlink-install --packages-select fast_lio
+
+
+CMAKE_BUILD_PARALLEL_LEVEL=$(nproc) colcon build \
+  --symlink-install \
+  --packages-select fast_lio \
+  --executor parallel \
+  --parallel-workers $(nproc) \
+  --cmake-args -DCMAKE_BUILD_TYPE=Release
 ```
 
 编译完成后：

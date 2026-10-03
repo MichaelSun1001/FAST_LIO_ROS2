@@ -58,8 +58,8 @@ find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(pcl_ros REQUIRED)
 find_package(pcl_conversions REQUIRED)
-find_package(livox_interfaces REQUIRED)
-find_package(livox_ros_driver2 REQUIRED)
+find_package(livox_interfaces QUIET)
+find_package(livox_ros_driver2 QUIET)
 find_package(rosidl_default_generators REQUIRED)
 
 set(dependencies
@@ -75,9 +75,17 @@ set(dependencies
   tf2_ros
   pcl_ros
   pcl_conversions
-  livox_interfaces
-  livox_ros_driver2
 )
+
+# Livox message packages are optional for PointCloud2-based sensors (including
+# Hesai JT16/JT128).  Keep the custom-message adapters available when both
+# packages are installed, but do not block builds that only use PointCloud2.
+if(livox_interfaces_FOUND AND livox_ros_driver2_FOUND)
+  list(APPEND dependencies livox_interfaces livox_ros_driver2)
+  add_compile_definitions(FAST_LIO_HAS_LIVOX=1)
+else()
+  message(WARNING "livox_interfaces/livox_ros_driver2 not found; Livox CustomMsg adapters disabled")
+endif()
 
 # Thirdparty libraries
 find_package(Eigen3 REQUIRED)

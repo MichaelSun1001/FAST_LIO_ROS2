@@ -84,6 +84,7 @@ void Preprocess::set(bool feat_en, int lid_type, double bld, int pfilt_num)
   point_filter_num = pfilt_num;
 }
 
+#ifdef FAST_LIO_HAS_LIVOX
 void Preprocess::process(const livox_interfaces::msg::CustomMsg::UniquePtr &msg, PointCloudXYZI::Ptr& pcl_out)
 {
   livox_custom_handler(msg);
@@ -95,6 +96,7 @@ void Preprocess::process(const livox_ros_driver2::msg::CustomMsg::UniquePtr &msg
   livox_custom_handler(msg);
   *pcl_out = pl_surf;
 }
+#endif
 
 void Preprocess::process(const sensor_msgs::msg::PointCloud2::UniquePtr &msg, PointCloudXYZI::Ptr& pcl_out)
 {
@@ -282,6 +284,7 @@ void Preprocess::hesai_handler(const sensor_msgs::msg::PointCloud2::UniquePtr &m
   }
 }
 
+#ifdef FAST_LIO_HAS_LIVOX
 template <typename LivoxCustomMsgUniquePtr>
 void Preprocess::livox_custom_handler_impl(const LivoxCustomMsgUniquePtr &msg)
 {
@@ -413,6 +416,7 @@ void Preprocess::livox_custom_handler(const livox_ros_driver2::msg::CustomMsg::U
 {
   livox_custom_handler_impl(msg);
 }
+#endif
 
 void Preprocess::robosense_airy_handler(const sensor_msgs::msg::PointCloud2::UniquePtr &msg,
                                         int i_sub_cloud, int num_sub_cloud,

@@ -38,6 +38,7 @@ import time
 try:
     import rclpy
     from rclpy.node import Node
+    from rclpy.qos import qos_profile_sensor_data
     from sensor_msgs.msg import Imu, PointCloud2
     ROS_VER = 2
 except ImportError:
@@ -154,8 +155,13 @@ class InputChecker:
             rclpy.shutdown()
             return
 
-        node.create_subscription(PointCloud2, self.lidar_topic, self._pc_cb,  10)
-        node.create_subscription(Imu,         self.imu_topic,   self._imu_cb, 100)
+        # Sensor drivers and rosbag2 commonly publish these streams with
+        # BEST_EFFORT QoS.  The sensor-data profile also remains compatible
+        # with RELIABLE publishers.
+        node.create_subscription(
+            PointCloud2, self.lidar_topic, self._pc_cb, qos_profile_sensor_data)
+        node.create_subscription(
+            Imu, self.imu_topic, self._imu_cb, qos_profile_sensor_data)
 
         deadline = time.time() + self.timeout
         while time.time() < deadline and not self.done.is_set():
